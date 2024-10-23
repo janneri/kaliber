@@ -1,0 +1,23 @@
+### Get hello text
+GET http://localhost:8080/hello
+
+
+### GET users
+GET http://localhost:8080/user
+
+### GET user 111
+GET http://localhost:8080/user/111
+
+### GET user 999
+GET http://localhost:8080/user/999
+
+
+### POST user
+POST localhost:8080/user
+Content-Type: application/json
+
+{
+  "id": 999,
+  "name": "New User",
+  "age": 30
+}
