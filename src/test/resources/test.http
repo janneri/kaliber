@@ -1,6 +1,11 @@
 ### Get hello text
 GET http://localhost:8080/hello
 
+### Get error
+GET http://localhost:8080/error
+
+### Get some path that does not exist
+GET http://localhost:8080/unknownpath
 
 ### GET users
 GET http://localhost:8080/user
@@ -20,4 +25,14 @@ Content-Type: application/json
   "id": 999,
   "name": "New User",
   "age": 30
+}
+
+### POST invalid json
+POST localhost:8080/user
+Content-Type: application/json
+
+{
+  "id": 999,
+  "name": "New User",
+  "age": "xxx"
 }

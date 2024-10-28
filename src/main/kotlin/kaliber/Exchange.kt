@@ -1,6 +1,7 @@
 package kaliber
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.sun.net.httpserver.Headers
 import com.sun.net.httpserver.HttpExchange
 import io.github.kaliber.kaliber.PathTemplate
 import java.io.OutputStream
@@ -10,17 +11,23 @@ import kotlin.reflect.KClass
 val objectMapper = jacksonObjectMapper()
 
 
-class Exchange(val exchange: HttpExchange) {
+class Exchange(val exchange: HttpExchange, var error: Throwable? = null)  {
     private val pathVariables = mutableMapOf<String, String>()
 
     inline fun <reified T> parseRequestJson(): T {
         return objectMapper.readValue(exchange.requestBody.readAllBytes().toString(Charsets.UTF_8), T::class.java)
     }
 
+    fun getRequestHeaders(): Headers? = exchange.requestHeaders
+
     fun pathVariable(name: String): String? = pathVariables[name]
 
+    inline fun <reified T : Any> getPathVariable(name: String): T? {
+        return pathVariable(name, T::class)
+    }
+
     fun <T : Any> pathVariable(name: String, targetType: KClass<T>): T? {
-        val value = pathVariable(name)
+        val value = pathVariables[name]
         return when (targetType) {
             Int::class -> value?.toIntOrNull() as T?
             Long::class -> value?.toLongOrNull() as T?
@@ -43,10 +50,14 @@ class Exchange(val exchange: HttpExchange) {
         this.pathVariables.putAll(pathVariables)
     }
 
-    fun respondWithJson(data: Any) {
-        val response = objectMapper.writeValueAsString(data)
+    fun respondWithJson(data: Any, statusCode: Int = 200) {
+        val response = try {
+            objectMapper.writeValueAsString(data)
+        } catch (e: Exception) {
+            TODO("Not yet implemented")
+        }
         exchange.responseHeaders.add("Content-Type", "application/json")
-        exchange.sendResponseHeaders(200, response.toByteArray().size.toLong())
+        exchange.sendResponseHeaders(statusCode, response.toByteArray().size.toLong())
         exchange.responseBody.use { os: OutputStream ->
             os.write(response.toByteArray())
         }
